@@ -1,0 +1,64 @@
+module au_top (
+    input clk,              // 100MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input usb_rx,           // USB->Serial input
+    output usb_tx           // USB->Serial output
+  ) {
+  
+  sig rst;                  // reset signal
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    
+    .rst(rst) {
+      dff led_state;            // Hold the state of our LED
+      #CLK_FREQ(100000000) {    // Don't forget to specify clock rate of board you are using
+        reg_interface reg;      // Our register interface component
+        #BAUD(1000000) {        // The baud rate of the uarts
+          uart_rx uart_rx;      // The uart required by the register interace
+          uart_tx uart_tx;      // The uart required by the register interace
+        }
+      }
+    }
+  }
+  
+  always {
+    reset_cond.in = ~rst_n;             // input raw inverted reset signal
+    rst = reset_cond.out;               // conditioned reset
+    
+    led = 8h00;                         // turn LEDs off
+
+    led_state.d = 1bx;                  // Don't care what the initial value of LED is
+    led[0] = led_state.q;               // Set LED0 to output of flip-flop
+    
+    // USB to UART Setup
+    usb_tx = uart_tx.tx;                // Unwind bytes into bits for USB output
+    uart_rx.rx = usb_rx;                // Frame up USB input bits for byte receiving
+    
+    // Set up UART_TX signals
+    uart_tx.block = 0;                  // Assume USB is always ready to send; uart will not block
+    uart_tx.new_data = reg.new_tx_data; // RI to tell uart when there is new data to send
+    uart_tx.data = reg.tx_data;         // RI telling the uart what the new data is
+    
+    // Set up reg signals
+    reg.tx_busy = uart_tx.busy;         // Uart telling RI when its busy streaming out bits
+    reg.new_rx_data = uart_rx.new_data; // Uart telling RI when there is new data to receive
+    reg.rx_data = uart_rx.data;         // Uart telling the RI what the new data is
+    
+    reg.regIn.drdy = 0;                 // Default to no data ready for master to input
+    reg.regIn.data = 32bx;              // Don't what the initial input is, as there is none
+    
+    if (reg.regOut.new_cmd) {           // Master outputs a new command is pending
+      if (reg.regOut.write) {           // Master signals that the command is a register write
+        case (reg.regOut.address) {     // Master indicates the address of the write
+          1:                            // The address we made up
+            // Write the state received to the LED flip-flop
+            led_state.d = reg.regOut.data[0];
+        }
+      }
+    }
+  }
+}
