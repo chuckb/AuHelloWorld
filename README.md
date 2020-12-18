@@ -2,7 +2,8 @@
 
 This project demonstrates a JavaFx application making use of the register interface to communicate
 with an [Alchitry FPGA Board](https://www.sparkfun.com/search/results?term=alchitry). It turns
-on and off LED0 on the Au board.
+on and off LED0 on the Au board. This example also shows how to wire up the USB signals on the Au
+board to the register interface through the uart components.
 
 It has been tested to work on Windows 10 and should work on [OSX with some workarounds](https://forum.alchitry.com/thread-264.html?highlight=mac).
 
