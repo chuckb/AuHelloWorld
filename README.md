@@ -7,7 +7,10 @@ board to the register interface through the uart components.
 
 It has been tested to work on Windows 10 and should work on [OSX with some workarounds](https://forum.alchitry.com/thread-264.html?highlight=mac).
 
+I walk though this project in detail [on Youtube](https://youtu.be/atH0MS5fdDA).
+
 ## Dependencies
+* [Alchitry Au or Cu](https://www.sparkfun.com/products/16527)
 * [Java 1.8 or better](https://java.com/en/download/manual.jsp)
 * [Alchitry Labs](https://alchitry.com/pages/alchitry-labs) Note: Use version 1.2.4. You will also need a design synthisizer appropriate
 for your board (see the Builders section at the bottom of the Alchitry Labs page).
